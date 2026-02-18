@@ -13,6 +13,8 @@
 
 [Quick Start](#-quick-start) • [How It Works](#-how-it-works) • [The Fitness Engine](#-the-fitness-engine) • [Live Dashboard](#-live-dashboard)
 
+![Hero View](images/main.png)
+
 </div>
 
 ---
@@ -93,6 +95,16 @@ python examples/multi_agent_demo.py
 # 2. Open the dashboard
 agentevolution-dashboard  # http://localhost:8080
 ```
+
+### 📊 Live Dashboard
+
+Visualize the ecosystem in real-time.
+
+**Overview & Stats:**
+![Overview Stats](images/overview.png)
+
+**Tool Registry:**
+![Tool Registry](images/registery.png)
 
 ---
 

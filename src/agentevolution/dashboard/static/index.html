@@ -11,34 +11,28 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
     <!-- Animated Background -->
+    <div class="bg-noise"></div>
     <div class="bg-grid"></div>
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
     <div class="bg-glow bg-glow-3"></div>
-    <div class="bg-particles" id="particles"></div>
+    <canvas id="constellation" class="bg-particles"></canvas>
 
     <!-- Navigation -->
     <nav class="nav">
         <div class="nav-left">
             <div class="live-indicator">
                 <div class="live-dot"></div>
-                <span>Live</span>
+                <span>Live Ecosystem</span>
             </div>
         </div>
         <div class="nav-center">
-            <div class="logo">
-                <div class="logo-mark">
-                    <span class="logo-symbol">⬡</span>
-                </div>
-                <div class="logo-text-group">
-                    <span class="logo-text">AgentEvolution</span>
-                    <span class="logo-sub">MCP Tool Ecosystem</span>
-                </div>
-            </div>
+            <!-- Logo removed as per request -->
         </div>
         <div class="nav-right">
             <button class="nav-tab active" data-tab="overview">Overview</button>
@@ -50,7 +44,14 @@
     <!-- Hero Section -->
     <section class="hero" id="hero">
         <div class="hero-content">
+            <div class="hero-logo-group">
+                <div class="hero-logo-mark">⬡</div>
+                <div class="hero-brand">AgentEvolution</div>
+                <div class="hero-brand-sub">MCP Tool Ecosystem</div>
+            </div>
+
             <div class="hero-badge">🧬 Natural Selection for Code</div>
+
             <h1 class="hero-title">
                 Every problem solved becomes a
                 <span class="gradient-text">reusable tool</span>
@@ -107,18 +108,13 @@
     <!-- Stats Section (visible on Overview tab) -->
     <section class="stats-grid section-overview">
         <div class="stat-card stat-highlight">
-            <div class="stat-ring" data-percent="0" id="stat-ring-fitness">
-                <svg viewBox="0 0 80 80">
-                    <circle cx="40" cy="40" r="36" stroke="rgba(255,255,255,0.06)" stroke-width="4" fill="none" />
-                    <circle cx="40" cy="40" r="36" stroke="url(#grad-purple)" stroke-width="4" fill="none"
-                        stroke-dasharray="226" stroke-dashoffset="226" stroke-linecap="round" class="stat-ring-fill"
-                        id="fitness-ring" />
-                </svg>
-                <div class="stat-ring-value" id="stat-fitness">—</div>
+            <div class="chart-container-sm">
+                <canvas id="fitnessChart"></canvas>
             </div>
             <div class="stat-info">
                 <div class="stat-label">Average Fitness</div>
                 <div class="stat-sublabel">Ecosystem health score</div>
+                <div class="stat-big-val" id="stat-fitness-text">—</div>
             </div>
         </div>
         <div class="stat-card">
@@ -153,6 +149,26 @@
         </div>
     </section>
 
+    <!-- Charts Row -->
+    <section class="charts-grid section-overview">
+        <div class="chart-card">
+            <div class="panel-header">
+                <h2 class="panel-title">Tool Creation Velocity</h2>
+            </div>
+            <div class="chart-body">
+                <canvas id="velocityChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="panel-header">
+                <h2 class="panel-title">Usage Distribution</h2>
+            </div>
+            <div class="chart-body">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+    </section>
+
     <!-- Main Content (always visible, but sidebar changes per tab) -->
     <main class="main-grid">
         <!-- Tool Registry -->
@@ -182,7 +198,7 @@
             <!-- Fitness Leaderboard -->
             <section class="panel panel-leaderboard">
                 <div class="panel-header">
-                    <h2 class="panel-title">🏆 Fitness Leaderboard</h2>
+                    <h2 class="panel-title">🏆 Top Performers</h2>
                 </div>
                 <div class="leaderboard" id="leaderboard">
                     <div class="skeleton-loader">
@@ -207,7 +223,7 @@
             <!-- Live Activity -->
             <section class="panel panel-activity">
                 <div class="panel-header">
-                    <h2 class="panel-title">📡 Live Activity</h2>
+                    <h2 class="panel-title">📡 Live Signal</h2>
                 </div>
                 <div class="activity-feed" id="activity-feed">
                     <div class="skeleton-loader">

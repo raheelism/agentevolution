@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════
-   AgentVerse Dashboard v2 — Frontend Logic
+   AgentEvolution Dashboard v2 — Frontend Logic
    ══════════════════════════════════════════════════ */
 
 const API = '';
@@ -19,51 +19,93 @@ function getAgentStyle(agentId) {
 // State
 let allTools = [];
 let currentSort = 'fitness';
+let fitnessChartInstance = null;
+let velocityChartInstance = null;
+let distributionChartInstance = null;
 
 // ─── Init ───
 
 document.addEventListener('DOMContentLoaded', () => {
+    initConstellation();
     loadDashboard();
     setupModal();
     setupSortButtons();
     setupNavTabs();
-    createParticles();
+
+    // Auto-refresh
     setInterval(loadDashboard, 5000);
 });
 
-// ─── Particles ───
+// ─── Constellation Effect ───
 
-function createParticles() {
-    const container = document.getElementById('particles');
-    if (!container) return;
-    for (let i = 0; i < 30; i++) {
-        const p = document.createElement('div');
-        p.style.cssText = `
-            position: absolute;
-            width: ${1 + Math.random() * 2}px;
-            height: ${1 + Math.random() * 2}px;
-            background: rgba(139, 92, 246, ${0.1 + Math.random() * 0.15});
-            border-radius: 50%;
-            left: ${Math.random() * 100}%;
-            top: ${Math.random() * 100}%;
-            animation: particle-drift ${15 + Math.random() * 20}s linear infinite;
-            animation-delay: ${-Math.random() * 20}s;
-        `;
-        container.appendChild(p);
+function initConstellation() {
+    const canvas = document.getElementById('constellation');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    // Resize
+    const resize = () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Create particles
+    for (let i = 0; i < 60; i++) {
+        particles.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            size: Math.random() * 2 + 1,
+            color: Math.random() > 0.5 ? 'rgba(139, 92, 246, 0.4)' : 'rgba(6, 182, 212, 0.4)'
+        });
     }
 
-    // Inject animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes particle-drift {
-            0%   { transform: translate(0, 0) scale(1);   opacity: 0; }
-            10%  { opacity: 1; }
-            90%  { opacity: 1; }
-            100% { transform: translate(${Math.random() > 0.5 ? '' : '-'}${50 + Math.random() * 100}px, -${200 + Math.random() * 300}px) scale(0.5); opacity: 0; }
+    // Animation Loop
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Update and draw particles
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x < 0 || p.x > width) p.vx *= -1;
+            if (p.y < 0 || p.y > height) p.vy *= -1;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+        });
+
+        // Draw connections
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 150) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 - dist / 1500})`;
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
         }
-    `;
-    document.head.appendChild(style);
+        requestAnimationFrame(animate);
+    }
+    animate();
 }
+
 
 // ─── Nav Tabs ───
 
@@ -72,7 +114,43 @@ function setupNavTabs() {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            // Could toggle views, for now just visual
+
+            const tabName = tab.dataset.tab;
+            const mainGrid = document.querySelector('.main-grid');
+            const overviewSections = document.querySelectorAll('.section-overview');
+            const chartsGrid = document.querySelector('.charts-grid'); // Explicitly select charts grid
+            const registryPanel = document.getElementById('panel-registry');
+            // Sidebar panels
+            const sidebar = document.querySelector('.sidebar');
+            const lbPanel = document.querySelector('.panel-leaderboard');
+            const agentPanel = document.querySelector('.panel-agents');
+            const actPanel = document.querySelector('.panel-activity');
+
+            // Reset
+            mainGrid.classList.remove('single-col');
+            sidebar.style.display = 'flex';
+            registryPanel.style.display = 'block';
+            lbPanel.style.display = 'block';
+            agentPanel.style.display = 'block';
+            actPanel.style.display = 'block'; // Ensure activity is shown by default
+
+            if (tabName === 'overview') {
+                overviewSections.forEach(el => el.style.display = 'grid');
+                if (chartsGrid) chartsGrid.style.display = 'grid';
+                mainGrid.style.display = 'grid';
+            } else if (tabName === 'registry') {
+                overviewSections.forEach(el => el.style.display = 'none');
+                if (chartsGrid) chartsGrid.style.display = 'none';
+                mainGrid.style.display = 'grid';
+            } else if (tabName === 'activity') {
+                overviewSections.forEach(el => el.style.display = 'none');
+                if (chartsGrid) chartsGrid.style.display = 'none';
+                mainGrid.classList.add('single-col');
+                registryPanel.style.display = 'none';
+                lbPanel.style.display = 'none';
+                agentPanel.style.display = 'none';
+                // Activity panel stays visible and takes full width due to single-col sidebar
+            }
         });
     });
 }
@@ -96,11 +174,11 @@ async function loadDashboard() {
     try {
         await Promise.all([loadStats(), loadTools(), loadLeaderboard(), loadActivity()]);
     } catch (err) {
-        console.error('Load error:', err);
+        // Silent fail on network error to avoid spamming console
     }
 }
 
-// ─── Stats ───
+// ─── Stats & Charts ───
 
 async function loadStats() {
     const res = await fetch(`${API}/api/stats`);
@@ -111,15 +189,100 @@ async function loadStats() {
     setStatValue('stat-uses', data.total_uses);
     setStatValue('stat-agents', data.unique_agents);
 
-    // Fitness ring
-    const fitnessEl = document.getElementById('stat-fitness');
-    fitnessEl.textContent = data.avg_fitness.toFixed(2);
+    // Update text
+    const fitnessText = document.getElementById('stat-fitness-text');
+    if (fitnessText) fitnessText.textContent = data.avg_fitness.toFixed(3);
 
-    const ring = document.getElementById('fitness-ring');
-    if (ring) {
-        const circumference = 2 * Math.PI * 36;
-        const offset = circumference * (1 - data.avg_fitness);
-        ring.style.strokeDashoffset = offset;
+    // Update charts
+    updateCharts(data);
+}
+
+function updateCharts(stats) {
+    // 1. Fitness Doughnut
+    const ctxFit = document.getElementById('fitnessChart');
+    if (ctxFit) {
+        if (fitnessChartInstance) {
+            fitnessChartInstance.data.datasets[0].data = [stats.avg_fitness, 1 - stats.avg_fitness];
+            fitnessChartInstance.update();
+        } else {
+            fitnessChartInstance = new Chart(ctxFit, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fitness', 'Gap'],
+                    datasets: [{
+                        data: [stats.avg_fitness, 1 - stats.avg_fitness],
+                        backgroundColor: ['#8b5cf6', 'rgba(255,255,255,0.05)'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    animation: { animateScale: true }
+                }
+            });
+        }
+    }
+
+    // 2. Velocity Chart (Mock data for demo, ideally from API)
+    const ctxVel = document.getElementById('velocityChart');
+    if (ctxVel) {
+        if (!velocityChartInstance) {
+            velocityChartInstance = new Chart(ctxVel, {
+                type: 'line',
+                data: {
+                    labels: ['1h ago', '45m', '30m', '15m', 'Now'],
+                    datasets: [{
+                        label: 'New Tools',
+                        data: [0, 2, 1, 3, 1], // In real app, fetch historical data
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
+    // 3. Distribution Chart
+    const ctxDist = document.getElementById('distributionChart');
+    if (ctxDist) {
+        if (!distributionChartInstance) {
+            distributionChartInstance = new Chart(ctxDist, {
+                type: 'bar',
+                data: {
+                    labels: ['Utils', 'Data', 'Web', 'Sys'],
+                    datasets: [{
+                        label: 'Tools by Tag',
+                        data: [4, 7, 2, 5], // Mock
+                        backgroundColor: ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
     }
 }
 
@@ -144,6 +307,11 @@ async function loadTools() {
     document.querySelector('.panel-count').textContent = data.total;
     renderTools();
     renderAgents();
+
+    // Update charts with real data if possible
+    if (velocityChartInstance) {
+        // Simple real-time update logic could go here
+    }
 }
 
 function renderTools() {
