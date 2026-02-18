@@ -1,0 +1,13 @@
+services:
+  agentevolution:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - agentevolution-data:/app/data
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  agentevolution-data:
